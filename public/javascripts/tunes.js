@@ -1,21 +1,38 @@
-var player = (function () {
-    var ch1 = T("wav", "sounds/808-clap.wav", false).load();
-    var ch1_dac = T("dac", ch1);
-    var ch2 = T("audio", "sounds/radetzky.mp3", false).load();
-    var ch2_dac = T("dac", ch2);
-    ch2.onloadeddata = function(res) {
+var ActivityTunes;
+;(function() {
+    var _ActivityTunes = function() {
+	this.ch1 = T("wav", "sounds/808-clap.wav", false).load();
+	this.ch1.mul = 0.0;
+	var ch1_dac = T("dac", this.ch1);
+	this.ch2 = T("audio", "sounds/radetzky.mp3", false);
+	var ch2_dac = T("dac", this.ch2);
+	this.master = T("efx.reverb", 500, 0.9);
 	var buddies = [ch1_dac, ch2_dac];
-	var master = T("efx.reverb", 500, 0.9);
-	master.buddy("play", buddies);
-	master.buddy("pause", buddies);
-	var timer = T("interval",1200, 570, function() {
-	    ch1.bang();
-	});
-	master.onplay = function() { timer.on(); }
-	
-	master.play();
-    }
-    
-})();
+	this.master.buddy("play", buddies);
+	this.master.buddy("pause", buddies);
 
-//player.play();
+    };
+    _ActivityTunes.prototype = {
+	ready: function(cb) {
+	    var self = this;
+	    this.ch2.onloadeddata = function() {
+		var timer = T("interval", 1200, (60/104)*1000, function() {
+		    var measure = Math.floor(timer.count / 4);
+		    if (measure >= self.activities.length)
+			timer.off();
+		    self.ch1.mul = Math.ceil(self.activities[measure] / 3);
+		    if (self.ch1.mul > 5) self.ch1.mul = 5.0;
+		    self.ch1.bang();
+		});
+		self.master.onplay = function() { timer.on(); }
+		cb.call(self);
+	    }
+	    this.ch2.load();
+        },
+	play: function(activities) {
+	    this.activities = activities;
+	    this.master.play();
+	}
+    };
+    ActivityTunes = new _ActivityTunes();
+})();

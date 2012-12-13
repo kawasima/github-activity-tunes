@@ -1,9 +1,14 @@
 !!!
 %html
   %head
-    %title @title
-    %link{ :rel => "stylesheet", :type => "text/css", :href => "/style.css" }
+    %title GitHub Activity Tunes
+    %meta{ :name => "viewport", :content => "width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" }
+    %link{ :rel => "stylesheet", :type => "text/css", :href => url("/stylesheets/bootstrap-custom.css") }
     = yield_content :head
   %body
-    %div.container
+    .navbar.navbar-fixed-top
+      .navbar-inner
+        .container
+          %a.brand{ :href => url('/') } GitHub Activity Tunes
+    %div.container{ :style => "margin-top: 50px;" }
       = yield

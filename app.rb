@@ -4,6 +4,8 @@ require 'sinatra'
 require 'sinatra/reloader' if development?
 require 'sinatra/content_for'
 
+require 'json'
+require 'yaml'
 require 'haml'
 require 'omniauth'
 require 'omniauth-github'
@@ -11,6 +13,7 @@ require 'faraday'
 require 'faraday_middleware'
 
 set :haml, { :format => :html5 }
+set :cacheDir, "cache"
 enable :sessions, :logging
 
 before do
@@ -18,7 +21,7 @@ before do
 end
 
 use OmniAuth::Builder do
-  provider :github, 'bdbaacc862910d00a2ae', '480c64e934829cd5d4f290e18df8e0e9cb946ff5'
+  provider :github, ENV['clientId'], ENV['clientSecret']
 end
 
 def repositories(user, token)
@@ -42,13 +45,15 @@ def activities(user, repo)
     faraday.use FaradayMiddleware::ParseJson
   end
 
-  obj = conn.get("/#{user}/#{repo}/graphs/owner_participation").body
-  p obj
-  obj
+  conn.get("/#{user}/#{repo}/graphs/owner_participation").body
 end
 
 get "/" do
-  haml :index
+  if session[:github_token]
+    haml :user_form
+  else
+    haml :index
+  end
 end
 
 get "/auth/:name/callback" do
@@ -58,23 +63,28 @@ get "/auth/:name/callback" do
 end
 
 post "/tune" do
-  user = params[:user].strip
-  j=0
-  @total_activities = []
-  repositories(user, session[:github_token]).each do |repo|
-    j+=1
-    activities(user, repo['name'])['owner'].each_with_index do |week_activities, week|
-      if total_activities[week]
-        total_activities[week] += week_activities.to_i
-      else
-        total_activities[week] = 0
+  @user = params[:user].strip
+  cache_file = "#{settings.cacheDir}/#{@user}.yml"
+  if File.file? cache_file
+    @total_activities = YAML.load_file(cache_file)
+  else
+    @total_activities = []
+    repositories(@user, session[:github_token]).each_with_index do |repo, repo_index|
+      next unless repo
+      (activities(@user, repo['name']) || { 'owner' => []})['owner'].each_with_index do |week_activities, week|
+        if @total_activities[week]
+          @total_activities[week] += week_activities.to_i
+        else
+          @total_activities[week] = 0
+        end
       end
+      break if repo_index > 15
     end
-    break if j > 15
+    @total_activities.reverse!
+    YAML.dump(@total_activities, File.open(cache_file, 'w'))
   end
 
-  @total_activities
-  haml :user_form
+  haml :tune
 end
 
 get '/tune' do
