@@ -6,6 +6,7 @@ var ActivityTunes;
 	var ch1_dac = T("dac", this.ch1);
 	this.ch2 = T("audio", "sounds/radetzky.mp3", false);
 	var ch2_dac = T("dac", this.ch2);
+	this.ch2.mul = 2.0;
 	this.master = T("efx.reverb", 500, 0.9);
 	var buddies = [ch1_dac, ch2_dac];
 	this.master.buddy("play", buddies);
@@ -20,8 +21,8 @@ var ActivityTunes;
 		    var measure = Math.floor(timer.count / 4);
 		    if (measure >= self.activities.length)
 			timer.off();
-		    self.ch1.mul = Math.ceil(self.activities[measure] / 3);
-		    if (self.ch1.mul > 5) self.ch1.mul = 5.0;
+		    self.ch1.mul = Math.ceil(self.activities[measure] / 3) / 2;
+		    if (self.ch1.mul > 3) self.ch1.mul = 3.0;
 		    self.ch1.bang();
 		});
 		self.master.onplay = function() { timer.on(); }
