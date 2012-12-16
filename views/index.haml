@@ -1,5 +1,22 @@
-.hero-unit
-  %p
+#fb-root
+:javascript
+  (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  js = d.createElement(s); js.id = id;
+  js.src = "//connect.facebook.net/ja_JP/all.js#xfbml=1";
+  fjs.parentNode.insertBefore(js, fjs);
+  }(document, 'script', 'facebook-jssdk'));
+.hero-unit{ :style => "padding: 10px" }
+  %h2
+    Let's play GitHub activities!
+  %small
     Sign in your GitHub Account
   %a{ :href => url('/auth/github') }
     %img{ :src => url('/images/github_64.png') }
+
+.row
+  %a.twitter-share-button{ :href => "https://twitter.com/share", :"data-text" => "GitHub Activity Tunes", :"data-lang" => "ja" } ツイート
+  :javascript
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+  .fb-like{ :"data-send" => "false", :"data-layout" => "button_count", :"data-show-faces" => "true" }
